@@ -1,10 +1,22 @@
 
 """Ingest Ethereum data from BigQuery."""
 
+import json
+import os
+
 from google.cloud import bigquery
+from google.oauth2 import service_account
 from subsets_utils import load_state, save_state, save_raw_json
 
 DEFAULT_START_DATE = "2023-01-01"
+
+
+def get_bigquery_client():
+    """Create BigQuery client with credentials from environment."""
+    creds_json = os.environ["GCP_SERVICE_ACCOUNT_KEY"]
+    creds_dict = json.loads(creds_json)
+    credentials = service_account.Credentials.from_service_account_info(creds_dict)
+    return bigquery.Client(credentials=credentials, project=creds_dict["project_id"])
 
 MAJOR_TOKENS = {
     "0xdac17f958d2ee523a2206206994597c13d831ec7": "USDT",
@@ -20,7 +32,7 @@ MAJOR_TOKENS = {
 
 def run():
     """Fetch Ethereum data from BigQuery and save raw."""
-    client = bigquery.Client()
+    client = get_bigquery_client()
     all_data = {}
 
     # Blocks
