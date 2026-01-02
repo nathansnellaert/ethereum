@@ -56,8 +56,10 @@ def run():
         transaction_count,
         base_fee_per_gas
     FROM `bigquery-public-data.crypto_ethereum.blocks`
-    WHERE number > {last_block}
+    WHERE timestamp >= '{DEFAULT_START_DATE}'
+      AND number > {last_block}
     ORDER BY number
+    LIMIT 100000
     """
 
     blocks_df = client.query(blocks_query).to_dataframe()
@@ -99,7 +101,7 @@ def run():
     WHERE block_timestamp >= '{DEFAULT_START_DATE}'
       AND block_number > {last_block}
     ORDER BY block_number, transaction_index
-    LIMIT 1000000
+    LIMIT 100000
     """
 
     transactions_df = client.query(transactions_query).to_dataframe()
@@ -134,7 +136,7 @@ def run():
       AND block_number > {last_block}
       AND token_address IN ({addresses})
     ORDER BY block_number, log_index
-    LIMIT 1000000
+    LIMIT 100000
     """
 
     transfers_df = client.query(transfers_query).to_dataframe()
