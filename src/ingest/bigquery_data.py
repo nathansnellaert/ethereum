@@ -3,19 +3,25 @@
 
 import json
 import os
+from datetime import datetime
 from decimal import Decimal
 
+import pandas as pd
 from google.cloud import bigquery
 from google.oauth2 import service_account
 from subsets_utils import load_state, save_state, save_raw_json
 
 
-def convert_decimals(records):
-    """Convert Decimal values to strings for JSON serialization."""
+def convert_for_json(records):
+    """Convert non-JSON-serializable types to serializable ones."""
     for record in records:
         for key, value in record.items():
             if isinstance(value, Decimal):
                 record[key] = str(value)
+            elif isinstance(value, (pd.Timestamp, datetime)):
+                record[key] = value.isoformat()
+            elif pd.isna(value):
+                record[key] = None
     return records
 
 DEFAULT_START_DATE = "2023-01-01"
@@ -75,7 +81,7 @@ def run():
     blocks_df = client.query(blocks_query).to_dataframe()
     if len(blocks_df) > 0:
         all_data["blocks"] = {
-            "data": convert_decimals(blocks_df.to_dict(orient="records")),
+            "data": convert_for_json(blocks_df.to_dict(orient="records")),
             "max_block": int(blocks_df["block_number"].max())
         }
         print(f"    Fetched {len(blocks_df):,} blocks")
@@ -117,7 +123,7 @@ def run():
     transactions_df = client.query(transactions_query).to_dataframe()
     if len(transactions_df) > 0:
         all_data["transactions"] = {
-            "data": convert_decimals(transactions_df.to_dict(orient="records")),
+            "data": convert_for_json(transactions_df.to_dict(orient="records")),
             "max_block": int(transactions_df["block_number"].max())
         }
         print(f"    Fetched {len(transactions_df):,} transactions")
@@ -152,7 +158,7 @@ def run():
     transfers_df = client.query(transfers_query).to_dataframe()
     if len(transfers_df) > 0:
         all_data["erc20_transfers"] = {
-            "data": convert_decimals(transfers_df.to_dict(orient="records")),
+            "data": convert_for_json(transfers_df.to_dict(orient="records")),
             "max_block": int(transfers_df["block_number"].max())
         }
         print(f"    Fetched {len(transfers_df):,} ERC-20 transfers")
