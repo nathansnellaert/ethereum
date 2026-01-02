@@ -1,0 +1,19 @@
+[project]
+name = "ethereum"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "psutil>=5.9.0",
+ "boto3",
+ "db-dtypes",
+ "duckdb",
+ "google-cloud-bigquery",
+ "google-cloud-bigquery-storage",
+ "httpx",
+ "pandas",
+ "pyarrow",
+ "deltalake>=0.17.0",
+ "ratelimit",
+ "requests",
+ "tenacity",
+]
